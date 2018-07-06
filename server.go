@@ -5,9 +5,11 @@ import (
 	"log"
 	"net"
 
-	"github.com/oswee/proto/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/oswee/server/handlers"
+	"github.com/oswee/server/proto"
 )
 
 // main starts a gRPC server and waits for connection
@@ -18,7 +20,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	// create a server instance
-	s := api.Server{}
+	s := handler.Server{}
 	// Create the TLS credentials
 	creds, err := credentials.NewServerTLSFromFile("cert/server.crt", "cert/server.key")
 	if err != nil {
@@ -28,7 +30,7 @@ func main() {
 	opts := []grpc.ServerOption{grpc.Creds(creds)}
 	// create a gRPC server object
 	grpcServer := grpc.NewServer(opts...)
-	// attach the Ping service to the server
+	// attach the Ping service to the server from API PB
 	api.RegisterPingServer(grpcServer, &s)
 	// start the server
 	if err := grpcServer.Serve(lis); err != nil {
