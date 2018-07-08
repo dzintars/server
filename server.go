@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/oswee/proto/api/go"
 	"github.com/oswee/server/handlers"
-	"github.com/oswee/server/proto"
 )
 
 // main starts a gRPC server and waits for connection
@@ -20,7 +20,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	// create a server instance
-	s := handler.Server{}
+	s := handlers.Server{}
 	// Create the TLS credentials
 	creds, err := credentials.NewServerTLSFromFile("cert/server.crt", "cert/server.key")
 	if err != nil {

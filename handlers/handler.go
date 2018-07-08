@@ -1,9 +1,9 @@
-package handler
+package handlers
 
 import (
 	"log"
 
-	"github.com/oswee/server/proto"
+	"github.com/oswee/proto/api/go"
 	"golang.org/x/net/context"
 )
 
