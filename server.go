@@ -1,53 +1,45 @@
 package main
 
 import (
-	"log"
+	"flag"
+	"fmt"
 	"net"
-	"strings"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"golang.org/x/net/context"
+	"github.com/oswee/proto"
+	"github.com/oswee/server/service"
 	"google.golang.org/grpc"
-
-	pb "github.com/oswee/proto/customer/go"
 )
-
-const (
-	port = ":50051"
-)
-
-// server is used to implement customer.CustomerServer.
-type server struct {
-	savedCustomers []*pb.CustomerRequest
-}
-
-// CreateCustomer creates a new Customer
-func (s *server) CreateCustomer(ctx context.Context, in *pb.CustomerRequest) (*pb.CustomerResponse, error) {
-	s.savedCustomers = append(s.savedCustomers, in)
-	return &pb.CustomerResponse{Id: in.Id, Success: true}, nil
-}
-
-// GetCustomers returns all customers by given filter
-func (s *server) GetCustomers(filter *pb.CustomerFilter, stream pb.Customer_GetCustomersServer) error {
-	for _, customer := range s.savedCustomers {
-		if filter.Keyword != "" {
-			if !strings.Contains(customer.Name, filter.Keyword) {
-				continue
-			}
-		}
-		if err := stream.Send(customer); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func main() {
-	lis, err := net.Listen("tcp", port)
+	port := flag.Int("port", 8080, "The port on which gRPC server will listen")
+	flag.Parse()
+	// We're not providing TLS options, so server will use plaintext.
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		fail(err)
 	}
-	// Creates a new gRPC server
-	s := grpc.NewServer()
-	pb.RegisterCustomerServer(s, &server{})
-	s.Serve(lis)
+	fmt.Printf("Listening on %v\n", lis.Addr())
+	svr := grpc.NewServer()
+	// register our service implementation
+	proto.RegisterStarfriendsServer(svr, &service.StarfriendsImpl{})
+	// trap SIGINT / SIGTERM to exit cleanly
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT)
+	signal.Notify(c, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("Shutting down...")
+		svr.GracefulStop()
+	}()
+	// finally, run the server
+	if err := svr.Serve(lis); err != nil {
+		fail(err)
+	}
+}
+func fail(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
 }
