@@ -26,7 +26,7 @@ func main() {
 	svr := grpc.NewServer()
 
 	// register our service implementation
-	proto.RegisterStarfriendsServer(svr, &service.StarfriendsImpl{})
+	proto.RegisterStarfriendsServer(svr, &service.Server{})
 
 	// trap SIGINT / SIGTERM to exit cleanly
 	c := make(chan os.Signal, 1)

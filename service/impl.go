@@ -47,11 +47,12 @@ func toProto(year, month, day int) *timestamp.Timestamp {
 	return ts
 }
 
-type StarfriendsImpl struct {
+type Server struct {
+	films []*proto.Film
 }
 
 // GetFilm queries a film by ID or returns an error if not found.
-func (s *StarfriendsImpl) GetFilm(ctx context.Context,
+func (s *Server) GetFilm(ctx context.Context,
 	req *proto.GetFilmRequest) (*proto.GetFilmResponse, error) {
 	var film *proto.Film
 	for _, f := range films {
@@ -67,13 +68,14 @@ func (s *StarfriendsImpl) GetFilm(ctx context.Context,
 }
 
 // ListFilms returns a list of all known films.
-func (s *StarfriendsImpl) ListFilms(ctx context.Context, req *proto.ListFilmsRequest) (*proto.ListFilmsResponse, error) {
+func (s *Server) ListFilms(ctx context.Context, req *proto.ListFilmsRequest) (*proto.ListFilmsResponse, error) {
 	getFilms := `SELECT id, title, director, producer FROM films;`
 	db := models.DBLoc()
 	rows, err := db.Query(getFilms)
 	if err != nil {
 		log.Fatalf("Failed to query database: %v", err)
 	}
+	defer rows.Close()
 	results := []*proto.Film{}
 	for rows.Next() {
 		film := proto.Film{}
@@ -99,4 +101,4 @@ func (s *StarfriendsImpl) ListFilms(ctx context.Context, req *proto.ListFilmsReq
 }
 
 // compile-type check that our new type provides the correct server interface
-var _ proto.StarfriendsServer = (*StarfriendsImpl)(nil)
+var _ proto.StarfriendsServer = (*Server)(nil)
