@@ -1,11 +1,13 @@
 package service
 
 import (
+	"log"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/oswee/proto"
+	"github.com/oswee/server/models"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -65,11 +67,36 @@ func (s *StarfriendsImpl) GetFilm(ctx context.Context,
 }
 
 // ListFilms returns a list of all known films.
-func (s *StarfriendsImpl) ListFilms(ctx context.Context,
-	req *proto.ListFilmsRequest) (*proto.ListFilmsResponse, error) {
-	return &proto.ListFilmsResponse{Films: films}, nil
+func (s *StarfriendsImpl) ListFilms(ctx context.Context, req *proto.ListFilmsRequest) (*proto.ListFilmsResponse, error) {
+	getFilms := `SELECT id, title, director, producer FROM films;`
+	db := models.DBLoc()
+	rows, err := db.Query(getFilms)
+	if err != nil {
+		log.Fatalf("Failed to query database: %v", err)
+	}
+	results := []*proto.Film{}
+	for rows.Next() {
+		film := proto.Film{}
+		var (
+			id       string
+			title    string
+			director string
+			producer string
+		)
+		err := rows.Scan(&id, &title, &director, &producer)
+		if err != nil {
+			log.Fatalf("Failed to read records: %v", err)
+		}
+		film.Id = id
+		film.Title = title
+		film.Director = director
+		film.Producer = producer
+
+		results = append(results, &film)
+	}
+	defer db.Close()
+	return &proto.ListFilmsResponse{Films: results}, nil
 }
 
-// compile-type check that our new type provides the
-// correct server interface
+// compile-type check that our new type provides the correct server interface
 var _ proto.StarfriendsServer = (*StarfriendsImpl)(nil)
