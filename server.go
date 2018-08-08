@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		fail(err)
 	}
-	fmt.Printf("Listening on %v\n", lis.Addr())
+	fmt.Printf("Server listening on %v\n", lis.Addr())
 	svr := grpc.NewServer()
 
 	// register our service implementation
@@ -34,7 +34,7 @@ func main() {
 	signal.Notify(c, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println("Shutting down...")
+		fmt.Println("Shutting down the server...")
 		svr.GracefulStop()
 	}()
 

@@ -48,12 +48,11 @@ func toProto(year, month, day int) *timestamp.Timestamp {
 }
 
 type Server struct {
-	films []*proto.Film
+	//films []*proto.Film
 }
 
 // GetFilm queries a film by ID or returns an error if not found.
-func (s *Server) GetFilm(ctx context.Context,
-	req *proto.GetFilmRequest) (*proto.GetFilmResponse, error) {
+func (s *Server) GetFilm(ctx context.Context, req *proto.GetFilmRequest) (*proto.GetFilmResponse, error) {
 	var film *proto.Film
 	for _, f := range films {
 		if f.Id == req.Id {
