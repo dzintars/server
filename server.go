@@ -3,10 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/oswee/proto/application/go"
 
 	"github.com/oswee/proto"
 	"github.com/oswee/server/service"
@@ -20,13 +23,14 @@ func main() {
 	// We're not providing TLS options, so server will use plaintext.
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		fail(err)
+		log.Fatalf("failed to listen: %v", err)
 	}
 	fmt.Printf("Server listening on %v\n", lis.Addr())
-	svr := grpc.NewServer()
+	grpcServer := grpc.NewServer()
 
 	// register our service implementation
-	proto.RegisterStarfriendsServer(svr, &service.Server{})
+	proto.RegisterStarfriendsServer(grpcServer, &service.Server{})
+	app.RegisterApplicationServiceServer(grpcServer, &service.Server{})
 
 	// trap SIGINT / SIGTERM to exit cleanly
 	c := make(chan os.Signal, 1)
@@ -35,12 +39,12 @@ func main() {
 	go func() {
 		<-c
 		fmt.Println("Shutting down the server...")
-		svr.GracefulStop()
+		grpcServer.GracefulStop()
 	}()
 
 	// finally, run the server
-	if err := svr.Serve(lis); err != nil {
-		fail(err)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to listen: %v", err)
 	}
 }
 func fail(err error) {
