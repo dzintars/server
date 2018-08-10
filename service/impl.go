@@ -71,7 +71,7 @@ func (s *Server) GetFilm(ctx context.Context, req *proto.GetFilmRequest) (*proto
 
 // GetApplication returns requested application data
 func (s *Server) GetApplication(ctx context.Context, req *app.GetApplicationRequest) (*app.GetApplicationResponse, error) {
-	var a *app.Application
+	var a app.Application
 	getApp := `SELECT
 			id,
 			parent_id,
@@ -80,19 +80,19 @@ func (s *Server) GetApplication(ctx context.Context, req *app.GetApplicationRequ
 			permalink,
 			type
 		FROM os_applications
-		WHERE os_applications.id = ?`
+		WHERE os_applications.id =?`
 	db := models.DBLoc()
 	row := db.QueryRow(getApp, req.Id)
 	switch err := row.Scan(&a.Id, &a.ParentId, &a.Name, &a.FullName, &a.Permalink, &a.Type); err {
 	case sql.ErrNoRows:
 		log.Fatal("No Application record were returned!")
 	case nil:
-		fmt.Println("Application:", a, "were returned")
+		fmt.Println("Application record were returned")
 	default:
 		panic(err)
 	}
 	defer db.Close()
-	return &app.GetApplicationResponse{Application: a}, nil
+	return &app.GetApplicationResponse{Application: &a}, nil
 }
 
 // ListFilms returns a list of all known films.
