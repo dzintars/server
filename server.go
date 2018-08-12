@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/oswee/proto/application/go"
+	"github.com/oswee/proto/shipping/go"
 
 	"github.com/oswee/proto"
 	"github.com/oswee/server/service"
@@ -31,6 +32,7 @@ func main() {
 	// register our service implementation
 	proto.RegisterStarfriendsServer(grpcServer, &service.Server{})
 	app.RegisterApplicationServiceServer(grpcServer, &service.Server{})
+	shipping.RegisterShippingServiceServer(grpcServer, &service.Server{})
 
 	// trap SIGINT / SIGTERM to exit cleanly
 	c := make(chan os.Signal, 1)

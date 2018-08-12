@@ -153,4 +153,4 @@ func (s *Server) ListApplications(ctx context.Context, req *app.ListApplications
 }
 
 // compile-type check that our new type provides the correct server interface
-// var _ proto.StarfriendsServer = (*Server)(nil)
+var _ proto.StarfriendsServer = (*Server)(nil)
