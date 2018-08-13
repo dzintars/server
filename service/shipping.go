@@ -10,7 +10,7 @@ import (
 
 // ListDeliveryOrders returns a list of all known films.
 func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliveryOrdersRequest) (*shipping.ListDeliveryOrdersResponse, error) {
-	listDeliveryOrders := `SELECT id, stakeholder_id, destination_address, total_weight, routing_sequence FROM delivery_orders WHERE stakeholder_id = ? LIMIT ?;`
+	listDeliveryOrders := `SELECT id, stakeholder_id, reference, destination_address, destination_zip, destination_lat, destination_lng, total_weight, routing_sequence FROM delivery_orders WHERE stakeholder_id = ? LIMIT ?;`
 	db := models.DBLoc()
 	rows, err := db.Query(listDeliveryOrders, req.StakeholderId, req.ResultPerPage)
 	if err != nil {
@@ -21,7 +21,7 @@ func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliv
 	for rows.Next() {
 		s := &shipping.DeliveryOrder{}
 
-		err := rows.Scan(&s.Id, &s.StakeholderId, &s.DestinationAddress, &s.TotalWeight, &s.RoutingSequence)
+		err := rows.Scan(&s.Id, &s.StakeholderId, &s.Reference, &s.DestinationAddress, &s.DestinationZip, &s.DestinationLat, &s.DestinationLng, &s.TotalWeight, &s.RoutingSequence)
 		if err != nil {
 			log.Fatalf("Failed to read records: %v", err)
 		}
