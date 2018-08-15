@@ -14,6 +14,7 @@ func (s *Server) CreatePageView(ctx context.Context, req *metric.CreatePageViewR
 	pv := `INSERT page_views SET
 		x_forwarded_host=?,
 		x_forwarded_server=?,
+		url=?,
 		user_agent=?,
 		x_forwarded_for=?,
 		request_time=?,
@@ -26,7 +27,13 @@ func (s *Server) CreatePageView(ctx context.Context, req *metric.CreatePageViewR
 		log.Println(err)
 	}
 	r := req.PageView
-	res, err := stmt.Exec(r.XForwardedHost, r.XForwardedServer, r.UserAgent, r.XForwardedFor, r.RequestTime, r.RequestHeaders)
+	res, err := stmt.Exec(
+		r.XForwardedHost,
+		r.XForwardedServer,
+		r.Url, r.UserAgent,
+		r.XForwardedFor,
+		r.RequestTime,
+		r.RequestHeaders)
 	if err != nil {
 		log.Fatal(err)
 	}

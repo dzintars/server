@@ -31,3 +31,36 @@ func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliv
 	defer db.Close()
 	return &shipping.ListDeliveryOrdersResponse{DeliveryOrders: r}, nil
 }
+
+// CreateDeliveryOrder creates new delivery order.
+func (s *Server) CreateDeliveryOrder(ctx context.Context, req *shipping.CreateDeliveryOrderRequest) (*shipping.DeliveryOrder, error) {
+	do := `INSERT delivery_orders SET
+		reference=?,
+		destination_address=?,
+		destination_zip=?,
+		destination_lat=?,
+		destination_lng=?,
+		total_weight=?,
+		routing_sequence=?`
+	db := models.DBLoc()
+	defer db.Close()
+
+	stmt, err := db.Prepare(do)
+	if err != nil {
+		log.Println(err)
+	}
+	r := req.DeliveryOrder
+	_, err = stmt.Exec(
+		r.Reference,
+		r.DestinationAddress,
+		r.DestinationZip,
+		r.DestinationLat,
+		r.DestinationLng,
+		r.TotalWeight,
+		r.RoutingSequence)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &shipping.DeliveryOrder{}, nil
+}
