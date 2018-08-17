@@ -10,7 +10,7 @@ import (
 
 // ListDeliveryOrders returns a list of all known films.
 func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliveryOrdersRequest) (*shipping.ListDeliveryOrdersResponse, error) {
-	listDeliveryOrders := `SELECT id, stakeholder_id, reference, destination_address, destination_zip, destination_lat, destination_lng, total_weight, routing_sequence FROM delivery_orders WHERE stakeholder_id = ? LIMIT ?;`
+	listDeliveryOrders := `SELECT id, stakeholder_id, reference, destination_address, destination_zip, destination_lat, destination_lng, total_weight, routing_sequence FROM delivery_orders WHERE stakeholder_id = ? ORDER BY routing_sequence ASC LIMIT ?;`
 	db := models.DBLoc()
 	rows, err := db.Query(listDeliveryOrders, req.StakeholderId, req.ResultPerPage)
 	if err != nil {
@@ -58,6 +58,41 @@ func (s *Server) CreateDeliveryOrder(ctx context.Context, req *shipping.CreateDe
 		r.DestinationLng,
 		r.TotalWeight,
 		r.RoutingSequence)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &shipping.DeliveryOrder{}, nil
+}
+
+// UpdateDeliveryOrder ...
+func (s *Server) UpdateDeliveryOrder(ctx context.Context, req *shipping.UpdateDeliveryOrderRequest) (*shipping.DeliveryOrder, error) {
+	do := `UPDATE delivery_orders SET
+		reference=?,
+		destination_address=?,
+		destination_zip=?,
+		destination_lat=?,
+		destination_lng=?,
+		total_weight=?,
+		routing_sequence=?
+		WHERE id=?`
+	db := models.DBLoc()
+	defer db.Close()
+
+	stmt, err := db.Prepare(do)
+	if err != nil {
+		log.Println(err)
+	}
+	r := req.DeliveryOrder
+	_, err = stmt.Exec(
+		r.Reference,
+		r.DestinationAddress,
+		r.DestinationZip,
+		r.DestinationLat,
+		r.DestinationLng,
+		r.TotalWeight,
+		r.RoutingSequence,
+		r.Id)
 	if err != nil {
 		log.Fatal(err)
 	}
