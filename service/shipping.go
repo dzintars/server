@@ -64,3 +64,21 @@ func (s *Server) CreateDeliveryOrder(ctx context.Context, req *shipping.CreateDe
 
 	return &shipping.DeliveryOrder{}, nil
 }
+
+// DeleteDeliveryOrder deletes delivery order of given ID
+func (s *Server) DeleteDeliveryOrder(ctx context.Context, req *shipping.DeleteDeliveryOrderRequest) (*shipping.EmptyDeliveryOrder, error) {
+	do := `DELETE FROM delivery_orders WHERE id=?`
+	db := models.DBLoc()
+	defer db.Close()
+
+	stmt, err := db.Prepare(do)
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = stmt.Exec(req.Id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &shipping.EmptyDeliveryOrder{}, nil
+}
