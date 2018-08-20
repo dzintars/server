@@ -6,7 +6,10 @@ import (
 	"github.com/oswee/proto/shipping/go"
 	"github.com/oswee/server/models"
 	"golang.org/x/net/context"
+	"googlemaps.github.io/maps"
 )
+
+var MapsApiKey string = "AIzaSyBslJsVcubCFlQvF36XuxXbrEOm588gSa4"
 
 // ListDeliveryOrders returns a list of all known films.
 func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliveryOrdersRequest) (*shipping.ListDeliveryOrdersResponse, error) {
@@ -116,4 +119,51 @@ func (s *Server) DeleteDeliveryOrder(ctx context.Context, req *shipping.DeleteDe
 	}
 
 	return &shipping.EmptyDeliveryOrder{}, nil
+}
+
+// GeoCode ...
+func geoCode(a string) ([]maps.GeocodingResult, error) {
+	c, err := maps.NewClient(maps.WithAPIKey(MapsApiKey))
+	if err != nil {
+		log.Fatalf("fatal error: %s", err)
+	}
+	r := &maps.GeocodingRequest{
+		Address: a,
+	}
+	loc, err := c.Geocode(context.Background(), r)
+	if err != nil {
+		log.Fatalf("fatal error: %s", err)
+	}
+	return loc, nil
+}
+
+// GeoCodeDeliveryOrder ...
+func (s *Server) GeoCodeDeliveryOrder(ctx context.Context, req *shipping.GeoCodeDeliveryOrderRequest) (*shipping.DeliveryOrder, error) {
+
+	sql := `UPDATE delivery_orders SET
+		destination_lat=?,
+		destination_lng=?
+		WHERE id=?`
+
+	db := models.DBLoc()
+	defer db.Close()
+
+	g, err := geoCode(req.Address)
+	if err != nil {
+		log.Fatalf("fatal error: %s", err)
+	}
+
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = stmt.Exec(
+		g[0].Geometry.Location.Lat,
+		g[0].Geometry.Location.Lng,
+		req.Id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &shipping.DeliveryOrder{}, nil
 }
