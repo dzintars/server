@@ -9,35 +9,61 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-var MapsApiKey string = "AIzaSyBslJsVcubCFlQvF36XuxXbrEOm588gSa4"
+// MapsAPIkey is a Google Maps API key for Oswee project (limited access)
+var MapsAPIkey string = "AIzaSyBslJsVcubCFlQvF36XuxXbrEOm588gSa4"
 
 // ListDeliveryOrders returns a list of all known films.
 func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliveryOrdersRequest) (*shipping.ListDeliveryOrdersResponse, error) {
-	listDeliveryOrders := `SELECT id, stakeholder_id, reference, destination_address, destination_zip, destination_lat, destination_lng, total_weight, routing_sequence FROM delivery_orders WHERE stakeholder_id = ? ORDER BY routing_sequence ASC LIMIT ?;`
+	listDeliveryOrdersSQL := `SELECT
+		id,
+		stakeholder_id,
+		reference,
+		destination_address,
+		destination_zip,
+		destination_lat,
+		destination_lng,
+		total_weight,
+		routing_sequence
+	FROM delivery_orders
+	WHERE stakeholder_id = ?
+	ORDER BY routing_sequence ASC
+	LIMIT ?;`
 	db := models.DBLoc()
-	rows, err := db.Query(listDeliveryOrders, req.StakeholderId, req.ResultPerPage)
+	rows, err := db.Query(listDeliveryOrdersSQL, req.StakeholderId, req.ResultPerPage)
 	if err != nil {
 		log.Fatalf("Failed to query database: %v", err)
 	}
 	defer rows.Close()
-	r := []*shipping.DeliveryOrder{}
-	for rows.Next() {
-		s := &shipping.DeliveryOrder{}
 
-		err := rows.Scan(&s.Id, &s.StakeholderId, &s.Reference, &s.DestinationAddress, &s.DestinationZip, &s.DestinationLat, &s.DestinationLng, &s.TotalWeight, &s.RoutingSequence)
+	rx := []*shipping.DeliveryOrder{}
+
+	for rows.Next() {
+		r := &shipping.DeliveryOrder{}
+		err := rows.Scan(
+			&r.Id,
+			&r.StakeholderId,
+			&r.Reference,
+			&r.DestinationAddress,
+			&r.DestinationZip,
+			&r.DestinationLat,
+			&r.DestinationLng,
+			&r.TotalWeight,
+			&r.RoutingSequence,
+		)
 		if err != nil {
 			log.Fatalf("Failed to read records: %v", err)
 		}
 
-		r = append(r, s)
+		rx = append(rx, r)
 	}
 	defer db.Close()
-	return &shipping.ListDeliveryOrdersResponse{DeliveryOrders: r}, nil
+	return &shipping.ListDeliveryOrdersResponse{DeliveryOrders: rx}, nil
 }
 
 // CreateDeliveryOrder creates new delivery order.
 func (s *Server) CreateDeliveryOrder(ctx context.Context, req *shipping.CreateDeliveryOrderRequest) (*shipping.DeliveryOrder, error) {
-	do := `INSERT delivery_orders SET
+	do := `INSERT delivery_orders
+	SET
 		reference=?,
 		destination_address=?,
 		destination_zip=?,
@@ -70,7 +96,8 @@ func (s *Server) CreateDeliveryOrder(ctx context.Context, req *shipping.CreateDe
 
 // UpdateDeliveryOrder ...
 func (s *Server) UpdateDeliveryOrder(ctx context.Context, req *shipping.UpdateDeliveryOrderRequest) (*shipping.DeliveryOrder, error) {
-	do := `UPDATE delivery_orders SET
+	do := `UPDATE delivery_orders
+	SET
 		reference=?,
 		destination_address=?,
 		destination_zip=?,
@@ -78,7 +105,7 @@ func (s *Server) UpdateDeliveryOrder(ctx context.Context, req *shipping.UpdateDe
 		destination_lng=?,
 		total_weight=?,
 		routing_sequence=?
-		WHERE id=?`
+	WHERE id=?`
 	db := models.DBLoc()
 	defer db.Close()
 
@@ -123,7 +150,7 @@ func (s *Server) DeleteDeliveryOrder(ctx context.Context, req *shipping.DeleteDe
 
 // GeoCode ...
 func geoCode(a string) ([]maps.GeocodingResult, error) {
-	c, err := maps.NewClient(maps.WithAPIKey(MapsApiKey))
+	c, err := maps.NewClient(maps.WithAPIKey(MapsAPIkey))
 	if err != nil {
 		log.Fatalf("fatal error: %s", err)
 	}
@@ -140,7 +167,8 @@ func geoCode(a string) ([]maps.GeocodingResult, error) {
 // GeoCodeDeliveryOrder ...
 func (s *Server) GeoCodeDeliveryOrder(ctx context.Context, req *shipping.GeoCodeDeliveryOrderRequest) (*shipping.DeliveryOrder, error) {
 
-	sql := `UPDATE delivery_orders SET
+	sql := `UPDATE delivery_orders 
+	SET
 		destination_lat=?,
 		destination_lng=?
 		WHERE id=?`

@@ -30,7 +30,8 @@ func (s *Server) CreatePageView(ctx context.Context, req *metric.CreatePageViewR
 	res, err := stmt.Exec(
 		r.XForwardedHost,
 		r.XForwardedServer,
-		r.Url, r.UserAgent,
+		r.Url,
+		r.UserAgent,
 		r.XForwardedFor,
 		r.RequestTime,
 		r.RequestHeaders)
