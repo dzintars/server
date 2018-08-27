@@ -9,12 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/oswee/proto/application/go"
-	"github.com/oswee/proto/metric/go"
-	"github.com/oswee/proto/shipping/go"
-
-	"github.com/oswee/proto"
 	"github.com/oswee/server/service"
+	app "github.com/oswee/stubs/app/v1"
+	dms "github.com/oswee/stubs/dms/v1"
+	metric "github.com/oswee/stubs/metric/v1"
 	"google.golang.org/grpc"
 )
 
@@ -30,10 +28,9 @@ func main() {
 	fmt.Printf("Server listening on %v\n", lis.Addr())
 	grpcServer := grpc.NewServer()
 
-	// register our service implementation
-	proto.RegisterStarfriendsServer(grpcServer, &service.Server{})
+	// Register our service implementation
 	app.RegisterApplicationServiceServer(grpcServer, &service.Server{})
-	shipping.RegisterShippingServiceServer(grpcServer, &service.Server{})
+	dms.RegisterShippingServiceServer(grpcServer, &service.Server{})
 	metric.RegisterMetricServer(grpcServer, &service.Server{})
 
 	// trap SIGINT / SIGTERM to exit cleanly
