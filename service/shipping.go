@@ -1,7 +1,9 @@
 package service
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/oswee/proto/shipping/go"
 	"github.com/oswee/server/models"
@@ -14,6 +16,7 @@ var MapsAPIkey string = "AIzaSyBslJsVcubCFlQvF36XuxXbrEOm588gSa4"
 
 // ListDeliveryOrders returns a list of all known films.
 func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliveryOrdersRequest) (*shipping.ListDeliveryOrdersResponse, error) {
+	qReqTime := time.Now()
 	listDeliveryOrdersSQL := `SELECT
 		id,
 		stakeholder_id,
@@ -57,6 +60,8 @@ func (s *Server) ListDeliveryOrders(ctx context.Context, req *shipping.ListDeliv
 		rx = append(rx, r)
 	}
 	defer db.Close()
+	qResTime := time.Now()
+	fmt.Println("ListDeliveryOrders executed at: ", qReqTime.Format("2006-01-02 15:04:05"), "; Took: ", qResTime.Sub(qReqTime))
 	return &shipping.ListDeliveryOrdersResponse{DeliveryOrders: rx}, nil
 }
 
