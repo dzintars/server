@@ -5,13 +5,13 @@ import (
 	"log"
 
 	"github.com/oswee/server/models"
-	protobuf "github.com/oswee/stubs"
+	pb "github.com/oswee/stubs"
 	metric "github.com/oswee/stubs/metric/v1"
 	"golang.org/x/net/context"
 )
 
 // CreatePageView returns a list of all known films.
-func (s *Server) CreatePageView(ctx context.Context, req *metric.CreatePageViewRequest) (*protobuf.Empty, error) {
+func (s *Server) CreatePageView(ctx context.Context, req *metric.CreatePageViewRequest) (*pb.Empty, error) {
 	pv := `INSERT page_views SET
 		x_forwarded_host=?,
 		x_forwarded_server=?,
@@ -41,5 +41,5 @@ func (s *Server) CreatePageView(ctx context.Context, req *metric.CreatePageViewR
 	}
 	fmt.Println(res)
 
-	return &protobuf.Empty{}, nil
+	return &pb.Empty{}, nil
 }

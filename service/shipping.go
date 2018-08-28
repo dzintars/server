@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/oswee/server/models"
-	protobuf "github.com/oswee/stubs"
+	pb "github.com/oswee/stubs"
 	dms "github.com/oswee/stubs/dms/v1"
 	"golang.org/x/net/context"
 	"googlemaps.github.io/maps"
@@ -137,7 +137,7 @@ func (s *Server) UpdateDeliveryOrder(ctx context.Context, req *dms.UpdateDeliver
 }
 
 // DeleteDeliveryOrder deletes delivery order of given ID
-func (s *Server) DeleteDeliveryOrder(ctx context.Context, req *dms.DeleteDeliveryOrderRequest) (*protobuf.Empty, error) {
+func (s *Server) DeleteDeliveryOrder(ctx context.Context, req *dms.DeleteDeliveryOrderRequest) (*pb.Empty, error) {
 	do := `DELETE FROM delivery_orders WHERE id=?`
 	db := models.DBLoc()
 	defer db.Close()
@@ -151,7 +151,7 @@ func (s *Server) DeleteDeliveryOrder(ctx context.Context, req *dms.DeleteDeliver
 		log.Fatal(err)
 	}
 
-	return &protobuf.Empty{}, nil
+	return &pb.Empty{}, nil
 }
 
 // GeoCode ...
