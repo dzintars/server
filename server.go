@@ -13,7 +13,11 @@ import (
 	app "github.com/oswee/stubs/app/v1"
 	dms "github.com/oswee/stubs/dms/v1"
 	metric "github.com/oswee/stubs/metric/v1"
+	session "github.com/oswee/stubs/session/v1"
+	//signin "github.com/oswee/stubs/signin/v1"
+	signup "github.com/oswee/stubs/signup/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func main() {
@@ -25,13 +29,28 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	// create a server instance
+	s := service.Server{}
+	// Create the TLS credentials
+	creds, err := credentials.NewServerTLSFromFile("cert/server.crt", "cert/server.key")
+	if err != nil {
+		log.Fatalf("could not load TLS keys: %s", err)
+	}
+	// Create an array of gRPC options with the credentials
+	opts := []grpc.ServerOption{grpc.Creds(creds)}
+
 	fmt.Printf("Server listening on %v\n", lis.Addr())
-	grpcServer := grpc.NewServer()
+
+	grpcServer := grpc.NewServer(opts...)
 
 	// Register our service implementation
-	app.RegisterApplicationServiceServer(grpcServer, &service.Server{})
-	dms.RegisterShippingServiceServer(grpcServer, &service.Server{})
-	metric.RegisterMetricServer(grpcServer, &service.Server{})
+	app.RegisterApplicationServiceServer(grpcServer, &s)
+	dms.RegisterShippingServiceServer(grpcServer, &s)
+	metric.RegisterMetricServer(grpcServer, &s)
+	//signin.RegisterSigninServiceServer(grpcServer, &service.Server{})
+	signup.RegisterSignupServiceServer(grpcServer, &s)
+	session.RegisterSessionServiceServer(grpcServer, &s)
 
 	// trap SIGINT / SIGTERM to exit cleanly
 	c := make(chan os.Signal, 1)
